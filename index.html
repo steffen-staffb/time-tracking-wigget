@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="widget-name" content="Time Tracking (ERGO)">
+    <meta name="widget-description" content="Time tracking dashboard with overtime balance and compliance checks">
+    <title>Zeiterfassung - ERGO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            padding: 1rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .cw-header {
+            background: #8c0439; /* ERGO Deep Burgundy */
+            color: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .cw-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .cw-header .cw-subtitle {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .cw-tab-bar {
+            display: flex;
+            gap: 0.35rem;
+            background: white;
+            border-radius: 12px;
+            padding: 0.35rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .cw-tab {
+            flex: 1;
+            padding: 0.6rem 0.5rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .cw-tab.active {
+            background: #8c0439; /* ERGO Deep Burgundy */
+            color: white;
+        }
+
+        .cw-tab:active {
+            transform: scale(0.97);
+        }
+
+        .overview-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .overview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .overview-card .card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .overview-card .card-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .overview-card .card-sub {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.15rem;
+        }
+
+        .overview-card.highlight {
+            background: #8c0439; /* ERGO Deep Burgundy */
+            color: white;
+        }
+
+        .overview-card.highlight .card-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .overview-card.highlight .card-sub {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .overtime-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .overtime-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .overtime-header .title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .overtime-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .overtime-badge.positive {
+            background: #f5e6e9; /* Light ERGO Burgundy tinted bg */
+            color: #8c0439;
+        }
+
+        .overtime-badge.neutral {
+            background: #f5f5f5;
+            color: #6b7280;
+        }
+
+        .overtime-bar-bg {
+            height: 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .overtime-bar {
+            height: 100%;
+            background: #8c0439; /* ERGO Deep Burgundy */
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .overtime-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .cw-section-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .daily-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .daily-row {
+            background: white;
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .daily-row.today {
+            border: 2px solid #8c0439; /* ERGO Deep Burgundy */
+        }
+
+        .daily-day {
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .daily-day .name {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .daily-day .num {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .daily-bar-container {
+            flex: 1;
+        }
+
+        .daily-bar-bg {
+            height: 24px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .daily-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding-left: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            transition: width 0.5s ease;
+        }
+
+        .daily-bar-fill.normal {
+            background: #8c0439; /* ERGO Deep Burgundy */
+        }
+
+        .daily-bar-fill.overtime {
+            background: linear-gradient(90deg, #8c0439 80%, #590418 100%);
+        }
+
+        .daily-bar-fill.short {
+            background: #e1c0c8;
+            color: #8c0439;
+        }
+
+        .daily-bar-fill.future {
+            background: #f5e6e9;
+            color: #8c0439;
+            border: 1px dashed #e1c0c8;
+        }
+
+        .daily-bar-fill.off {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .daily-hours {
+            min-width: 45px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .daily-hours .target {
+            font-size: 0.65rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .daily-row .today-badge {
+            font-size: 0.6rem;
+            background: #8c0439; /* ERGO Deep Burgundy */
+            color: white;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .compliance-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .compliance-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .compliance-item + .compliance-item {
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .compliance-item .check-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .compliance-item .check-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .compliance-item .check-icon.ok {
+            background: #e2edea;
+            color: #0e4a3c; /* Dark Teal from Welcome text */
+        }
+
+        .compliance-item .check-icon.warn {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .compliance-item .check-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .monthly-view {
+            display: none;
+        }
+
+        .monthly-view.active {
+            display: block;
+        }
+
+        .weekly-view {
+            display: none;
+        }
+
+        .weekly-view.active {
+            display: block;
+        }
+
+        .month-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .month-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 0;
+            font-size: 0.85rem;
+        }
+
+        .month-row + .month-row {
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .month-row .label {
+            color: #6b7280;
+        }
+
+        .month-row .value {
+            font-weight: 700;
+        }
+
+        .month-row .value.positive {
+            color: #8c0439; /* ERGO Deep Burgundy */
+        }
+
+        .month-row .value.negative {
+            color: #c62828;
+        }
+
+        .clock-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .clock-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .clock-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .clock-status-dot.active {
+            background: #0e4a3c;
+            animation: clock-pulse 2s infinite;
+        }
+
+        .clock-status-dot.inactive {
+            background: #6b7280;
+        }
+
+        @keyframes clock-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .clock-status-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clock-timer {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .clock-detail {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .clock-btn {
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .clock-btn:active {
+            transform: scale(0.97);
+        }
+
+        .clock-btn.clock-in {
+            background: #8c0439; /* ERGO Deep Burgundy */
+            color: white;
+        }
+
+        .clock-btn.clock-out {
+            background: #1a1a1a;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="cw-header">
+    <h1 data-i18n="h1">Meine Zeiterfassung</h1>
+    <div class="cw-subtitle" data-i18n="subtitle">Februar 2026</div>
+</div>
+
+<div class="clock-card">
+    <div class="clock-status">
+        <div class="clock-status-dot inactive" id="clockDot"></div>
+        <div class="clock-status-text" id="clockStatusText" data-i18n="clockOff">Nicht eingestempelt</div>
+    </div>
+    <div class="clock-timer" id="clockTimer">00:00:00</div>
+    <div class="clock-detail" id="clockDetail" data-i18n="clockDetailOff">Heute noch nicht gestartet</div>
+    <button class="clock-btn clock-in" id="clockBtn" onclick="toggleClock()">
+        &#9654; Einstempeln
+    </button>
+</div>
+
+<div class="cw-tab-bar">
+    <button class="cw-tab active" onclick="showTab('weekly')" data-i18n="tabWeekly">Diese Woche</button>
+    <button class="cw-tab" onclick="showTab('monthly')" data-i18n="tabMonthly">Monats&uuml;bersicht</button>
+</div>
+
+<!-- WEEKLY VIEW -->
+<div class="weekly-view active" id="weeklyView">
+
+    <div class="overview-cards">
+        <div class="overview-card highlight">
+            <div class="card-label" data-i18n="cardWorked">Geleistet diese Woche</div>
+            <div class="card-value">8,5h</div>
+            <div class="card-sub" data-i18n="cardWorkedSub">von 38,5h Soll</div>
+        </div>
+        <div class="overview-card">
+            <div class="card-label" data-i18n="cardRemaining">Verbleibend</div>
+            <div class="card-value">30h</div>
+            <div class="card-sub" data-i18n="cardRemainingPlanned">Di - Fr geplant</div>
+        </div>
+        <div class="overview-card">
+            <div class="card-label" data-i18n="cardOvertime">&Uuml;berstundenkonto</div>
+            <div class="card-value" style="color:#8c0439">+12,5h</div>
+            <div class="card-sub">Stand: 10.02.2026</div>
+        </div>
+        <div class="overview-card">
+            <div class="card-label" data-i18n="cardAvg">Durchschnitt/Tag</div>
+            <div class="card-value">8,1h</div>
+            <div class="card-sub" data-i18n="cardAvgSub">Letzte 30 Tage</div>
+        </div>
+    </div>
+
+    <div class="cw-section-title" data-i18n="sectionDaily">Tages&uuml;bersicht - KW 7</div>
+
+    <div class="daily-list">
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="dayMo">Mo</div>
+                <div class="num">09</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill normal" style="width:100%" data-i18n="barBooked" data-n="8,5">8,5h gebucht</div>
+                </div>
+            </div>
+            <div class="daily-hours">
+                8,5h
+                <div class="target">/ 8h</div>
+            </div>
+        </div>
+        <div class="daily-row today">
+            <div class="daily-day">
+                <div class="name" data-i18n="dayTu">Di</div>
+                <div class="num">10</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill future" style="width:100%" data-i18n="barPlanned" data-n="8,5">8,5h geplant</div>
+                </div>
+            </div>
+            <div class="daily-hours">
+                <span style="color:#6b7280">8,5h</span>
+                <div class="target">/ 8h</div>
+            </div>
+        </div>
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="dayWe">Mi</div>
+                <div class="num">11</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill future" style="width:94%" data-i18n="barPlanned" data-n="8">8h geplant</div>
+                </div>
+            </div>
+            <div class="daily-hours">
+                <span style="color:#6b7280">8h</span>
+                <div class="target">/ 8h</div>
+            </div>
+        </div>
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="dayTh">Do</div>
+                <div class="num">12</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill future" style="width:100%" data-i18n="barPlanned" data-n="8,5">8,5h geplant</div>
+                </div>
+            </div>
+            <div class="daily-hours">
+                <span style="color:#6b7280">8,5h</span>
+                <div class="target">/ 8h</div>
+            </div>
+        </div>
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="dayFr">Fr</div>
+                <div class="num">13</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill future" style="width:59%" data-i18n="barPlanned" data-n="5">5h geplant</div>
+                </div>
+            </div>
+            <div class="daily-hours">
+                <span style="color:#6b7280">5h</span>
+                <div class="target">/ 8h</div>
+            </div>
+        </div>
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="daySa">Sa</div>
+                <div class="num">14</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill off" style="width:25%" data-i18n="barOff">Frei</div>
+                </div>
+            </div>
+            <div class="daily-hours" style="color:#6b7280">
+                &mdash;
+            </div>
+        </div>
+        <div class="daily-row">
+            <div class="daily-day">
+                <div class="name" data-i18n="daySu">So</div>
+                <div class="num">15</div>
+            </div>
+            <div class="daily-bar-container">
+                <div class="daily-bar-bg">
+                    <div class="daily-bar-fill off" style="width:25%" data-i18n="barOff">Frei</div>
+                </div>
+            </div>
+            <div class="daily-hours" style="color:#6b7280">
+                &mdash;
+            </div>
+        </div>
+    </div>
+
+    <div class="cw-section-title" data-i18n="sectionCompliance">Arbeitszeitregeln</div>
+
+    <div class="compliance-card">
+        <div class="compliance-item">
+            <div class="check-label">
+                <div class="check-icon ok">&#10003;</div>
+                <span data-i18n="checkMax10h">Max. 10h/Tag eingehalten</span>
+            </div>
+            <div class="check-value" style="color:#0e4a3c">OK</div>
+        </div>
+        <div class="compliance-item">
+            <div class="check-label">
+                <div class="check-icon ok">&#10003;</div>
+                <span data-i18n="checkBreak">Pausenregelung eingehalten</span>
+            </div>
+            <div class="check-value" style="color:#0e4a3c">OK</div>
+        </div>
+        <div class="compliance-item">
+            <div class="check-label">
+                <div class="check-icon ok">&#10003;</div>
+                <span data-i18n="checkRest">Min. 11h Ruhezeit</span>
+            </div>
+            <div class="check-value" style="color:#0e4a3c">OK</div>
+        </div>
+        <div class="compliance-item">
+            <div class="check-label">
+                <div class="check-icon ok">&#10003;</div>
+                <span data-i18n="checkWeekly48">Max. 48h/Woche (&#216; 6 Monate)</span>
+            </div>
+            <div class="check-value" style="color:#0e4a3c">38,2h</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MONTHLY VIEW -->
+<div class="monthly-view" id="monthlyView">
+
+    <div class="overview-cards">
+        <div class="overview-card highlight">
+            <div class="card-label" data-i18n="cardWorkedMonth">Gearbeitet (Feb)</div>
+            <div class="card-value">42,5h</div>
+            <div class="card-sub" data-i18n="cardWorkedMonthSub">von 160h Soll</div>
+        </div>
+        <div class="overview-card">
+            <div class="card-label" data-i18n="cardWorkdays">Arbeitstage</div>
+            <div class="card-value">5 / 20</div>
+            <div class="card-sub" data-i18n="cardWorkdaysSub">15 verbleibend</div>
+        </div>
+    </div>
+
+    <div class="overtime-card">
+        <div class="overtime-header">
+            <div class="title" data-i18n="cardOvertime">&Uuml;berstundenkonto</div>
+            <div class="overtime-badge positive">+12,5h</div>
+        </div>
+        <div class="overtime-bar-bg">
+            <div class="overtime-bar" style="width: 65%"></div>
+        </div>
+        <div class="overtime-details">
+            <span>0h</span>
+            <span data-i18n="overtimeLimit">Obergrenze: 40h</span>
+        </div>
+    </div>
+
+    <div class="cw-section-title" data-i18n="sectionMonthly">Monats&uuml;bersicht</div>
+
+    <div class="month-summary">
+        <div class="month-row">
+            <span class="label" data-i18n="rowTarget">Soll-Arbeitszeit</span>
+            <span class="value">160h</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="rowActual">Ist-Arbeitszeit (bisher)</span>
+            <span class="value">42,5h</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="rowOvertimeFromActual">Davon &Uuml;berstunden</span>
+            <span class="value positive">+2,5h</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="rowOvertimeTotal">&Uuml;berstundenkonto gesamt</span>
+            <span class="value positive">+12,5h</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="rowSickDays">Krankheitstage</span>
+            <span class="value">0</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="rowVacation">Urlaubstage genommen</span>
+            <span class="value">0</span>
+        </div>
+    </div>
+
+    <div class="cw-section-title" data-i18n="sectionLastMonths">Letzte Monate</div>
+
+    <div class="month-summary">
+        <div class="month-row">
+            <span class="label" data-i18n="lmJan">Januar 2026</span>
+            <span class="value positive" data-i18n="overtime" data-n="+4,5">+4,5h &Uuml;berstunden</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="lmDec">Dezember 2025</span>
+            <span class="value positive" data-i18n="overtime" data-n="+3,0">+3,0h &Uuml;berstunden</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="lmNov">November 2025</span>
+            <span class="value negative" data-i18n="minusHours" data-n="-1,5">-1,5h Minusstunden</span>
+        </div>
+        <div class="month-row">
+            <span class="label" data-i18n="lmOct">Oktober 2025</span>
+            <span class="value positive" data-i18n="overtime" data-n="+2,0">+2,0h &Uuml;berstunden</span>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const LANG = (() => {
+      const l = navigator.language || '';
+      if (l.startsWith('de')) return 'de';
+      if (l.startsWith('fr')) return 'fr';
+      if (l.startsWith('es')) return 'es';
+      if (l.startsWith('ja')) return 'ja';
+      if (l === 'en-GB')      return 'en-GB';
+      return 'en-US';
+    })();
+    document.documentElement.lang = LANG;
+    const LOCALE = {
+      'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES',
+      'ja': 'ja-JP', 'en-GB': 'en-GB', 'en-US': 'en-US'
+    }[LANG];
+    const CURRENCY = {
+      'de': 'EUR', 'fr': 'EUR', 'es': 'EUR',
+      'ja': 'JPY', 'en-GB': 'GBP', 'en-US': 'USD'
+    }[LANG];
+    const HOUR12 = LANG === 'en-GB' || LANG === 'en-US';
+
+    const T = {
+      de: {
+        h1: 'Meine Zeiterfassung',
+        subtitle: 'Februar 2026',
+        clockOff: 'Nicht eingestempelt',
+        clockIn: 'Eingestempelt',
+        clockOut: 'Ausgestempelt',
+        clockDetailOff: 'Heute noch nicht gestartet',
+        clockStarted: 'Gestartet um {time} Uhr',
+        clockSession: 'Letzte Sitzung: {hours}h {mins}min',
+        btnClockIn: '&#9654; Einstempeln',
+        btnClockOut: '&#9632; Ausstempeln',
+        tabWeekly: 'Diese Woche',
+        tabMonthly: 'Monatsübersicht',
+        cardWorked: 'Geleistet diese Woche',
+        cardWorkedSub: 'von 38,5h Soll',
+        cardRemaining: 'Verbleibend',
+        cardRemainingPlanned: 'Di – Fr geplant',
+        cardOvertime: 'Überstundenkonto',
+        cardAvg: 'Durchschnitt/Tag',
+        cardAvgSub: 'Letzte 30 Tage',
+        sectionDaily: 'Tagesübersicht – KW 7',
+        sectionCompliance: 'Arbeitszeitregeln',
+        sectionMonthly: 'Monatsübersicht',
+        sectionLastMonths: 'Letzte Monate',
+        dayMo: 'Mo', dayTu: 'Di', dayWe: 'Mi', dayTh: 'Do', dayFr: 'Fr', daySa: 'Sa', daySu: 'So',
+        barBooked: '{n}h gebucht',
+        barPlanned: '{n}h geplant',
+        barOff: 'Frei',
+        checkMax10h: 'Max. 10h/Tag eingehalten',
+        checkBreak: 'Pausenregelung eingehalten',
+        checkRest: 'Min. 11h Ruhezeit',
+        checkWeekly48: 'Max. 48h/Woche (Ø 6 Monate)',
+        cardWorkedMonth: 'Gearbeitet (Feb)',
+        cardWorkedMonthSub: 'von 160h Soll',
+        cardWorkdays: 'Arbeitstage',
+        cardWorkdaysSub: '15 verbleibend',
+        overtimeLimit: 'Obergrenze: 40h',
+        rowTarget: 'Soll-Arbeitszeit',
+        rowActual: 'Ist-Arbeitszeit (bisher)',
+        rowOvertimeFromActual: 'Davon Überstunden',
+        rowOvertimeTotal: 'Überstundenkonto gesamt',
+        rowSickDays: 'Krankheitstage',
+        rowVacation: 'Urlaubstage genommen',
+        lmJan: 'Januar 2026',
+        lmDec: 'Dezember 2025',
+        lmNov: 'November 2025',
+        lmOct: 'Oktober 2025',
+        overtime: '{n}h Überstunden',
+        minusHours: '{n}h Minusstunden'
+      },
+      fr: {
+        h1: 'Mon suivi du temps',
+        subtitle: 'Février 2026',
+        clockOff: 'Non pointé',
+        clockIn: 'Pointage entrée',
+        clockOut: 'Pointage sortie',
+        clockDetailOff: "Pas encore démarré aujourd'hui",
+        clockStarted: 'Démarré à {time}',
+        clockSession: 'Dernière session : {hours}h {mins}min',
+        btnClockIn: '&#9654; Pointer entrée',
+        btnClockOut: '&#9632; Pointer sortie',
+        tabWeekly: 'Cette semaine',
+        tabMonthly: 'Vue mensuelle',
+        cardWorked: 'Heures effectuées cette semaine',
+        cardWorkedSub: 'sur 38,5h prévues',
+        cardRemaining: 'Restant',
+        cardRemainingPlanned: 'Mar – Ven prévu',
+        cardOvertime: 'Compte heures sup.',
+        cardAvg: 'Moyenne/jour',
+        cardAvgSub: '30 derniers jours',
+        sectionDaily: 'Vue quotidienne – Sem. 7',
+        sectionCompliance: 'Règles de temps de travail',
+        sectionMonthly: 'Vue mensuelle',
+        sectionLastMonths: 'Mois précédents',
+        dayMo: 'Lu', dayTu: 'Ma', dayWe: 'Me', dayTh: 'Je', dayFr: 'Ve', daySa: 'Sa', daySu: 'Di',
+        barBooked: '{n}h effectué',
+        barPlanned: '{n}h prévu',
+        barOff: 'Repos',
+        checkMax10h: 'Max. 10h/jour respecté',
+        checkBreak: 'Règle de pause respectée',
+        checkRest: 'Min. 11h de repos',
+        checkWeekly48: 'Max. 48h/sem. (moy. 6 mois)',
+        cardWorkedMonth: 'Travaillé (fév.)',
+        cardWorkedMonthSub: 'sur 160h prévues',
+        cardWorkdays: 'Jours travaillés',
+        cardWorkdaysSub: '15 restants',
+        overtimeLimit: 'Plafond : 40h',
+        rowTarget: 'Temps prévu',
+        rowActual: 'Temps réel (à ce jour)',
+        rowOvertimeFromActual: 'Dont heures sup.',
+        rowOvertimeTotal: 'Total heures sup.',
+        rowSickDays: 'Jours de maladie',
+        rowVacation: 'Congés pris',
+        lmJan: 'Janvier 2026',
+        lmDec: 'Décembre 2025',
+        lmNov: 'Novembre 2025',
+        lmOct: 'Octobre 2025',
+        overtime: '{n}h supplémentaires',
+        minusHours: '{n}h déficit'
+      },
+      es: {
+        h1: 'Mi control de tiempo',
+        subtitle: 'Febrero 2026',
+        clockOff: 'Sin fichar',
+        clockIn: 'Fichaje entrada',
+        clockOut: 'Fichaje salida',
+        clockDetailOff: 'No iniciado hoy',
+        clockStarted: 'Iniciado a las {time}',
+        clockSession: 'Última sesión: {hours}h {mins}min',
+        btnClockIn: '&#9654; Fichar entrada',
+        btnClockOut: '&#9632; Fichar salida',
+        tabWeekly: 'Esta semana',
+        tabMonthly: 'Vista mensual',
+        cardWorked: 'Horas trabajadas esta semana',
+        cardWorkedSub: 'de 38,5h previstas',
+        cardRemaining: 'Restante',
+        cardRemainingPlanned: 'Mar – Vie previsto',
+        cardOvertime: 'Cuenta horas extra',
+        cardAvg: 'Media/día',
+        cardAvgSub: 'Últimos 30 días',
+        sectionDaily: 'Vista diaria – Sem. 7',
+        sectionCompliance: 'Normas de jornada',
+        sectionMonthly: 'Vista mensual',
+        sectionLastMonths: 'Meses anteriores',
+        dayMo: 'Lu', dayTu: 'Ma', dayWe: 'Mi', dayTh: 'Ju', dayFr: 'Vi', daySa: 'Sá', daySu: 'Do',
+        barBooked: '{n}h trabajado',
+        barPlanned: '{n}h previsto',
+        barOff: 'Libre',
+        checkMax10h: 'Máx. 10h/día cumplido',
+        checkBreak: 'Norma de pausas cumplida',
+        checkRest: 'Mín. 11h de descanso',
+        checkWeekly48: 'Máx. 48h/sem. (prom. 6 meses)',
+        cardWorkedMonth: 'Trabajado (feb.)',
+        cardWorkedMonthSub: 'de 160h previstas',
+        cardWorkdays: 'Días laborables',
+        cardWorkdaysSub: '15 restantes',
+        overtimeLimit: 'Límite: 40h',
+        rowTarget: 'Tiempo previsto',
+        rowActual: 'Tiempo real (hasta ahora)',
+        rowOvertimeFromActual: 'De los cuales horas extra',
+        rowOvertimeTotal: 'Total horas extra',
+        rowSickDays: 'Días de baja',
+        rowVacation: 'Vacaciones tomadas',
+        lmJan: 'Enero 2026',
+        lmDec: 'Diciembre 2025',
+        lmNov: 'Noviembre 2025',
+        lmOct: 'Octubre 2025',
+        overtime: '{n}h extra',
+        minusHours: '{n}h déficit'
+      },
+      ja: {
+        h1: '勤怠管理',
+        subtitle: '2026年2月',
+        clockOff: '未打刻',
+        clockIn: '出勤打刻',
+        clockOut: '退勤打刻',
+        clockDetailOff: '本日未開始',
+        clockStarted: '{time}に開始',
+        clockSession: '前回セッション: {hours}h {mins}分',
+        btnClockIn: '&#9654; 出勤',
+        btnClockOut: '&#9632; 退勤',
+        tabWeekly: '今週',
+        tabMonthly: '月次概要',
+        cardWorked: '今週の実績時間',
+        cardWorkedSub: '所定38.5hのうち',
+        cardRemaining: '残り',
+        cardRemainingPlanned: '火〜金の予定',
+        cardOvertime: '残業時間口座',
+        cardAvg: '1日平均',
+        cardAvgSub: '過去30日',
+        sectionDaily: '日次サマリー – 第7週',
+        sectionCompliance: '労働時間ルール',
+        sectionMonthly: '月次概要',
+        sectionLastMonths: '過去の月',
+        dayMo: '月', dayTu: '火', dayWe: '水', dayTh: '木', dayFr: '金', daySa: '土', daySu: '日',
+        barBooked: '{n}h実績',
+        barPlanned: '{n}h予定',
+        barOff: '休み',
+        checkMax10h: '1日最大10h遵守',
+        checkBreak: '休憩規定遵守',
+        checkRest: '最低11h休息',
+        checkWeekly48: '週最大48h（6ヶ月平均）',
+        cardWorkedMonth: '実働（2月）',
+        cardWorkedMonthSub: '所定160hのうち',
+        cardWorkdays: '勤務日数',
+        cardWorkdaysSub: '残り15日',
+        overtimeLimit: '上限: 40h',
+        rowTarget: '所定労働時間',
+        rowActual: '実績（現時点）',
+        rowOvertimeFromActual: 'うち残業時間',
+        rowOvertimeTotal: '残業時間合計',
+        rowSickDays: '病欠日数',
+        rowVacation: '取得済み有給',
+        lmJan: '2026年1月',
+        lmDec: '2025年12月',
+        lmNov: '2025年11月',
+        lmOct: '2025年10月',
+        overtime: '{n}h残業',
+        minusHours: '{n}hマイナス'
+      },
+      'en-GB': {
+        h1: 'My Time Tracking',
+        subtitle: 'February 2026',
+        clockOff: 'Not clocked in',
+        clockIn: 'Clocked in',
+        clockOut: 'Clocked out',
+        clockDetailOff: 'Not started today',
+        clockStarted: 'Started at {time}',
+        clockSession: 'Last session: {hours}h {mins}min',
+        btnClockIn: '&#9654; Clock in',
+        btnClockOut: '&#9632; Clock out',
+        tabWeekly: 'This week',
+        tabMonthly: 'Monthly overview',
+        cardWorked: 'Hours worked this week',
+        cardWorkedSub: 'of 38.5h target',
+        cardRemaining: 'Remaining',
+        cardRemainingPlanned: 'Tue – Fri planned',
+        cardOvertime: 'Overtime account',
+        cardAvg: 'Average/day',
+        cardAvgSub: 'Last 30 days',
+        sectionDaily: 'Daily overview – Wk 7',
+        sectionCompliance: 'Working time rules',
+        sectionMonthly: 'Monthly overview',
+        sectionLastMonths: 'Previous months',
+        dayMo: 'Mon', dayTu: 'Tue', dayWe: 'Wed', dayTh: 'Thu', dayFr: 'Fri', daySa: 'Sat', daySu: 'Sun',
+        barBooked: '{n}h booked',
+        barPlanned: '{n}h planned',
+        barOff: 'Off',
+        checkMax10h: 'Max. 10h/day observed',
+        checkBreak: 'Break rules observed',
+        checkRest: 'Min. 11h rest',
+        checkWeekly48: 'Max. 48h/week (avg. 6 months)',
+        cardWorkedMonth: 'Worked (Feb)',
+        cardWorkedMonthSub: 'of 160h target',
+        cardWorkdays: 'Working days',
+        cardWorkdaysSub: '15 remaining',
+        overtimeLimit: 'Limit: 40h',
+        rowTarget: 'Target hours',
+        rowActual: 'Actual hours (so far)',
+        rowOvertimeFromActual: 'Of which overtime',
+        rowOvertimeTotal: 'Total overtime',
+        rowSickDays: 'Sick days',
+        rowVacation: 'Annual leave taken',
+        lmJan: 'January 2026',
+        lmDec: 'December 2025',
+        lmNov: 'November 2025',
+        lmOct: 'October 2025',
+        overtime: '{n}h overtime',
+        minusHours: '{n}h undertime'
+      },
+      'en-US': {
+        h1: 'My Time Tracking',
+        subtitle: 'February 2026',
+        clockOff: 'Not clocked in',
+        clockIn: 'Clocked in',
+        clockOut: 'Clocked out',
+        clockDetailOff: 'Not started today',
+        clockStarted: 'Started at {time}',
+        clockSession: 'Last session: {hours}h {mins}min',
+        btnClockIn: '&#9654; Clock In',
+        btnClockOut: '&#9632; Clock Out',
+        tabWeekly: 'This Week',
+        tabMonthly: 'Monthly View',
+        cardWorked: 'Worked This Week',
+        cardWorkedSub: 'of 38.5h target',
+        cardRemaining: 'Remaining',
+        cardRemainingPlanned: 'Tue – Fri planned',
+        cardOvertime: 'Overtime Balance',
+        cardAvg: 'Average/Day',
+        cardAvgSub: 'Last 30 days',
+        sectionDaily: 'Daily Overview – CW 7',
+        sectionCompliance: 'Working Time Rules',
+        sectionMonthly: 'Monthly Overview',
+        sectionLastMonths: 'Recent Months',
+        dayMo: 'Mon', dayTu: 'Tue', dayWe: 'Wed', dayTh: 'Thu', dayFr: 'Fri', daySa: 'Sat', daySu: 'Sun',
+        barBooked: '{n}h booked',
+        barPlanned: '{n}h planned',
+        barOff: 'Off',
+        checkMax10h: 'Max. 10h/day observed',
+        checkBreak: 'Break policy observed',
+        checkRest: 'Min. 11h rest period',
+        checkWeekly48: 'Max. 48h/week (avg. 6 months)',
+        cardWorkedMonth: 'Worked (Feb)',
+        cardWorkedMonthSub: 'of 160h target',
+        cardWorkdays: 'Work Days',
+        cardWorkdaysSub: '15 remaining',
+        overtimeLimit: 'Limit: 40h',
+        rowTarget: 'Target Hours',
+        rowActual: 'Actual Hours (so far)',
+        rowOvertimeFromActual: 'Thereof Overtime',
+        rowOvertimeTotal: 'Total Overtime Balance',
+        rowSickDays: 'Sick Days',
+        rowVacation: 'Vacation Days Taken',
+        lmJan: 'January 2026',
+        lmDec: 'December 2025',
+        lmNov: 'November 2025',
+        lmOct: 'October 2025',
+        overtime: '{n}h overtime',
+        minusHours: '{n}h undertime'
+      }
+    };
+
+    const t = T[LANG] ?? T['en-US'];
+
+    function tr(key, vars) {
+      vars = vars || {};
+      var s = t[key] || key;
+      Object.keys(vars).forEach(function(k) {
+        s = s.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+      });
+      return s;
+    }
+
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.dataset.i18n;
+        var val = t[key];
+        if (!val) return;
+        var n = el.dataset.n;
+        el.textContent = n ? val.replace('{n}', n) : val;
+      });
+      var btn = document.getElementById('clockBtn');
+      if (btn) btn.innerHTML = t.btnClockIn;
+    }
+
+    document.addEventListener('DOMContentLoaded', applyTranslations);
+
+    var clockedIn = false;
+    var clockStart = null;
+    var clockInterval = null;
+
+    function toggleClock() {
+        var btn = document.getElementById('clockBtn');
+        var dot = document.getElementById('clockDot');
+        var statusText = document.getElementById('clockStatusText');
+        var detail = document.getElementById('clockDetail');
+
+        if (!clockedIn) {
+            clockedIn = true;
+            clockStart = new Date();
+            btn.className = 'clock-btn clock-out';
+            btn.innerHTML = t.btnClockOut;
+            dot.className = 'clock-status-dot active';
+            statusText.textContent = t.clockIn;
+            statusText.style.color = '#0e4a3c';
+            var h = clockStart.getHours().toString().padStart(2, '0');
+            var m = clockStart.getMinutes().toString().padStart(2, '0');
+            detail.textContent = tr('clockStarted', {time: h + ':' + m});
+            clockInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        } else {
+            clockedIn = false;
+            clearInterval(clockInterval);
+            var elapsed = Math.floor((new Date() - clockStart) / 1000);
+            var hours = Math.floor(elapsed / 3600);
+            var mins = Math.floor((elapsed % 3600) / 60);
+            btn.className = 'clock-btn clock-in';
+            btn.innerHTML = t.btnClockIn;
+            dot.className = 'clock-status-dot inactive';
+            statusText.textContent = t.clockOut;
+            statusText.style.color = '#6b7280';
+            detail.textContent = tr('clockSession', {hours: hours, mins: mins});
+            clockStart = null;
+        }
+    }
+
+    function updateTimer() {
+        if (!clockStart) return;
+        var elapsed = Math.floor((new Date() - clockStart) / 1000);
+        var h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+        var m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+        var s = (elapsed % 60).toString().padStart(2, '0');
+        document.getElementById('clockTimer').textContent = h + ':' + m + ':' + s;
+    }
+
+    function showTab(view) {
+        var tabs = document.querySelectorAll('.cw-tab');
+        tabs.forEach(function(tab) { tab.classList.remove('active'); });
+
+        if (view === 'weekly') {
+            tabs[0].classList.add('active');
+            document.getElementById('weeklyView').classList.add('active');
+            document.getElementById('monthlyView').classList.remove('active');
+        } else {
+            tabs[1].classList.add('active');
+            document.getElementById('weeklyView').classList.remove('active');
+            document.getElementById('monthlyView').classList.add('active');
+        }
+    }
+</script>
+
+</body>
+</html>
